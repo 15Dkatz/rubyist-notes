@@ -16,6 +16,7 @@ class Person
     @hobbies << hobby
   end
 
+
   def has_friend(friend)
     @friends << friend
   end
