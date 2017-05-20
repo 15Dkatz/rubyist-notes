@@ -1,1 +1,401 @@
 -- google docs https://docs.google.com/document/d/1gWgTiohDF4AiEhhzuE3OSF8p3z4qYuk6l8uwUHIK8-k/edit --
+
+Refer to https://github.com/15Dkatz/rubyist-notes for code creating while note taking.
+
+Part 1: Ruby Foundations
+
+Chapter 1: Basics
+Run programs with the -cw flag, `ruby -cw program.rb` in order to check for syntax errors.
+-c checks for syntax errors
+-w checks if you have questionable (but ok) syntax
+require is more abstract than load. Require does not duplicate required code to save costs. Require is meant to include features, and load simply loads files. Require is the standard way to include standard library features.
+irb is a great tool for testing Ruby code right on the command line. 
+When irb recognizes an expression it immediately prints it
+days = 365, prints 365
+2 + 2 prints 4
+puts “Hello”, prints Hello, and then nil, since puts returns a nil value
+Use the --noecho flag to suppress the expression-evaluating printing
+Make Rakefiles for management utilities with rake. Literally name the Rakefile, Rakefile. Then run rake --tasks to check the executable commands within the namespaces of Rakefile. You don’t necessarily need a namespace though and can define a task at the top-level namespace.
+
+Chapter 2: Objects
+Objects respond to notes
+In methods, the return keyword is optional. However, it helps make implicit returns of expressions explicit.
+String interpolation with “Variable inserted: ${variable}”
+Everything in Ruby has a Boolean value, even puts statements which evaluate to nil.
+Every object in Ruby has an id. The number 100 and 100 share the same id. But two strings “hello” and “hello” have different ids.
+Check if an object has a can respond to a message with .respond_to?
+.respond_to? is an example of introspection - examining a program while it’s running.
+Methods can take more than one argument by using an asterisks in front of a parameter. def method(*x). x then represents an array of passed in values. method(1, 2, 3), makes x = [1, 2, 3]. Sponging takes the lowest priority though, so method(a, b *x, c) with method(1, 2, 3, 4, 5) will leave x with only [3, 4].
+Provide default values as well with method(x=1). Making x 1 if the method is called without arguing x.
+Ruby doesn’t allow more than one sponge argument in a parameter list.
+Variables in Ruby contain references to string objects. The variable only receives a reference to the object that it gets assigned to. Variables assigned to other variables receive a copy of the same reference.
+On reassignment the variable is wiped clean and a new assignment is made.
+.freeze strings and array to prevent them from changing
+.dup an object, and make the duplicate unfrozen if the original is frozen.
+.clone an object to clone frozen objects
+Just because you freeze an array though, doesn’t mean you prevent the objects inside from manipulation. a = [“one”, “two”].freeze. a[0] = “changed” // Runtime error. a[0].replace(“changed”) // [“changed”, “two”]
+
+Chapter 3: Classes
+Singleton methods are declared for specific objects. obj.talk is an example of a singleton method being declared for an object called obj.
+Instance methods are held within classes, so all object instances of the class will share that method.
+It is actually possible to open and reopen class definitions, albeit confusing. One reason to break up class definitions is to spread them across multiple files.
+Ruby is about objects, and objects are instances of classes.
+Instance variable names start with a single @ (at sign). They are only visible to the object to which they belong.
+Define setter methods in classes as set= to say obj.set= for syntactic sugar. The appended “=” sign allows for syntactic sugar in calling the set method later.
+attr_reader defines getter methods for a class. 
+attr_reader :venue, :date puts def venue, def date, within the class.
+attr_writer defines the setter methods for a class
+attr_reader :price, puts def price= within the class.
+Accomplish inheritance with the < operator. Class Rubyist < Person. Rubyist will inherit all of Person’s methods such as attr_accessor, def methods, and more.
+Ruby maintains a principle of single inheritance. A Teacher class cannot inherit both a Person and Employee class in Ruby. But Ruby’s single inheritance is not restrictive. It provides modules which are bundles of programming functionality to classes. They don’t have instances though, but can graft into your class’s family tree to provide as many methods to objects as needed.
+Every class is a sub-subclass of Object, or, at some distance, a direct descendant of Object. Object inherits from BasicObject which inherits from space.
+All classes are objects. And classes are also an instance of the Class object.
+The superclass of Class is Module from which the Class receives the attr_accessor and attr_reader methods.
+Declare CONSTANTS in a class with uppercase letters
+Refer to constants in a class with double colons. Class::CONSTANTS
+Ruby has many predefined constants such as Math::PI
+You can redefine constants, except you will receive a warning
+If the constant is an array, you can add to the array with <<. For example, venues = Ticket::VENUES. Venues << “High School Gym”
+“Is a”. If Magazine inherits from Publication, then Magazine is a Publication.
+Nature vs. nurture. The capabilities that an object is born with, don’t necessarily represent the methods it may end up containing for its entire life. It may get nurtured and receive methods throughout the life of the application.
+
+Chapter 4: Modules
+The Class class is a subclass of the Module class.
+The Kernel module contains the majority of the methods common to all objects.
+Modules don’t have instances. Instead, they get mixed into classes, using either the include method or prepend method.
+A class can’t inherit more than one class, but it can inherit more than one module. This allows multiple classes to inherit the same module, and allows you to split your code up in further a more granular way.
+The ||= operator assigns to the left variable to the value on the right if the variable is still nil or false. Otherwise, it simply returns what is stored by the variable.
+In terms of method lookup, check if the object’s class contains a method pertaining to that message name. Then check if any included modules contain that method name. Then look to the superclass. Then look at that superclass’s included modules for the message. Keep going until the message is found.
+Many of the shared methods for all objects actually come from the Kernel module that the Object class includes. Since all objects inherit from the Object, they all get the methods included within that Kernel include.
+You can re-declare a method. The method than used in the object lookup is the first one encountered.
+The most recent module takes precedence in method lookup. But simply re-including a previous module over the most recent one does not re-override any implemented methods. For example, include M, include N, include M still makes N the most recent module included. Therefore, N’s methods will take precedence in the method lookup process.
+Prepending a module makes that module take precedence over the class itself in the method lookup process.
+Use the .ancestors message to check all the inherited classes and therefore included modules of an object.
+A singleton method lies in a special class created for the sole purpose of containing that method for the object.
+Jump up to the next-highest definition of a method with super.
+Use super in an initialize method for example to call the chain of initialize methods within the class Hierarchy. super without arguments automatically forwards the arguments passed to the original method.
+The method_missing method is provided by the Kernel module in order to give output when a message is attempted that does not exist in the method lookup path.
+A mix in defines methods that use an included module’s methods within the functions.
+Modules tend to be adjectives. Classes tend to be nouns.
+You can nest Classes into modules. module Tools class Hammer end end, has Tools::Hammer available.
+Objects don’t have methods. Classes and modules have methods; objects have the ability to traverse classes and modules in search of methods.
+
+Chapter 5: Scope
+Self is the “default”, current object. Scope determines the visibility of variables. Method access distinguishes among access level of methods depending on the scope and self.
+Top-level methods are written outside of any class or module definition.
+Levels: top level (global), class-definition blocks, module-definitions blocs, and method-definition blocks.
+Declaring variables and methods at the top-level creates top-level local variables and top-level methods.
+The first self is main, and accessed through m = self.
+If you call a method without a receiver, self is the default object. The most common use case is within an instance method calling another instance method.
+Every instance variable (at sign variables) belongs to whatever object is current (self).
+Scope and self don’t necessarily change at the same time. You can change scope without self changing.
+Global Scope covers the scope of the entire program. Global scope variables are recognizable by their initial dollar-sign ($) character. You can access global variables from any scope in the program. 
+Beware the temptation to overuse global variables. They fundamentally violate the privacy of objects, and can lead to a lot of entangled code when too many methods attempt to manipulate the same global variable.
+Local scope changes the supply of local variables. The top level,and  every class, module, and method definition has its own local scope.
+You can reuse variable names in different scopes.
+Every time a method is called, a new local scope is generated.
+Constants are also dependent on scope. The constant X in one scope is not identical to the constant X in another.
+You can access constants starting at the top level by prepending a double colon to the constant you’re searching for. What if you had a Violin class with an embedded String class, but needed the top-level String class later? Access the original String constant with ::String.
+Class variables begin with two at signs: @@var
+A class variable at its simplest provides a way to share storage between a class and instances of that class.
+Beware that it’s nice for class variables to be shared by instances of the class. But you may want new class variables for subclasses. You can maintain per-class state with instance variables of class objects rather than class variables themselves.
+There are private, protected, and public methods. Public methods are the most common.
+Change the method access of methods by adding a new line that declares them as private with the private keyword.
+A protected method is similar to a private method, but a bit gentler. It allows calls of the method on an object x, as long as the default object (self) is an instance of the same class as x or of an ancestor or descendant class of x’s class.
+A top level method that you declare immediately within a file without a module or lass is stored as private instance method of the Object class. def method_private end, is equivalent to class Object def method_private end end.
+Methods like puts and print are private methods of the Kernel module.
+
+Chapter 6 : Control-flow Techniques
+Ruby’s control-flow techniques include conditional execution, looping, iteration, and exceptions
+You can put an entire if statement on a single line using the then keyword, if x > 10 then puts x end. Or use semicolons to mimic line breaks. If x > 10; puts x; end
+Use if, else, then, elseif, end
+Use parentheses for order of execution
+Unless provides a more natural-sounding way to express if not or if !:
+puts “Big number!” if x > 100 is equivalent to if x > 100 puts “Big number!” end
+If false x = 1 end p x, will output nil for x since the Ruby parser doesn’t care whether x is ever assigned a value. The parser simply scours the code for local variables for which space needs allocation and assigns them nil values, even if that variable is never ultimately assigned a value. p y without assignment however, will be a fatal error for y is unknown.
+Assignment x = 1 is true. Therefore, if x = 1 puts “Hi!” end is valid. But Ruby will give you a warning saying that it found assignment in the conditional, and that you probably should use an equality operator like ==.
+Case statements start with case and you then use when clauses. Golden line “Case statements are easier to grasp by example than by description.”
+When uses the three equals operator ===, and is really syntactic sugar for the .=== message. For strings, it makes sure to compare every character against every character. If it’s a perfect match, return true. Otherwise return false.
+You can override the triple equals in a class for object comparison like Java! Then you can override how equality is checked, perhaps only looking at one property of the Class for the object.
+When you begin a case statement without a condition, with no test expression, the first when clause that evaluates to true ends up going through.
+Case statements have a return value embedded within. You can print a case statement and have it ultimately print the String returned by the first valid when case.
+There’s a loop method. The loop method continues forever and ever unless it’s broken within the loop.
+One way to break the loop is to use the break keyword.
+No increment operator n++, or decrement operator, n--
+Run while loops that loop while a given condition is true. You can use begin/end to explicitly mark the beginning and end of a while loop.
+You can use the until keyword in a similar manner. While and until are executed at least once before the condition is tested.
+Loop based on a list of values with the for keyword.
+loop is an iterator. The loop method has access to the code inside its block, and can call it. To do this from your own iterator, use the yield keyword.
+Methods can take block calls. The difference between a method with a block call and one without one, is that the block call method has a yield statement.
+For example array.map takes a code block, and executes the block of code one item at a time for each within the array. This block of code is yielded one item at a time for the block of code.
+The times method belongs to the Integer class, and you can use it to do looping as well. Internally, it’s a method with a yield as well, that executes the block call that we pass to it.
+Where each returns the receiver, map returns an entirely new array.
+Blocks have direct access to variables that already exist in the scope. However if you have a variable of a given name in scope, and use that same name as one of your block parameters, then the two variables are not the same.
+You can however tell a block parameter to have its own variable, ignoring the variables names of outer parameters, by specifying it after a semicolon: 3.times do |i;x| for example, makes x its own variable within the block, even if x was already assigned outside of the block.
+Ruby handles unacceptable behavior at runtime by raising an exception.
+An exception is a special kind of object, that is an instance of the class Exception. Raising an exception means stopping normal execution of the program.
+Use the rescue keyword to handle raised exceptions and pass control to other blocks of code.
+You can raise your own defined exceptions. If you raise an exception without an exception name, then Ruby will produce the generic RuntimeError.
+raise “Problem!” is equivalent to raise RuntimeError, “Problem!”
+In your rescue statement, place e as a parameter, and backtrace the error with e.backtrace. Likewise, message with e.message.
+Use the ensure clause to make sure a certain block or line of code executes whether or not the rescue clause is executed.
+Create your own exception classes by inheriting from the Exception class.
+
+Part 1: Built-in Classes and Modules
+
+Chapter 7: Built-in Essentials
+Ruby provides many built-in classes.
+For the most part, you can create instances of Ruby’s built-in classes: Array.new, String.new. You can’t do so for Integer however.
+Some use literal constructors, so you can create instances without calling .new.
+You can overwrite some syntactic sugar operations for custom classes. Say you added a “+” method to the class. This would overwrite Ruby’s special addition method for the Class. You get the added benefit of being able to use the “+=” shortcut for your method.
+The bang labels a method as “dangerous” which usually means that it, unlike its nonbang equivalent, permanently modifies its receiver.
+str.upcase will simply return a copy that is the all uppercased version of the original string. str.upcase! will modify the original string though.
+If you call the gbang version of Ruby’s core class method, you modify the original object. Otherwise, you get a new object.
+Only use the bang operator on methods if there is a pairing of the same method name in the Class that is not as “dangerous”.
+Built in conversion methods exist with the to_* methods. Most, if not all classes should implement the to_s method to convert the object to a string.
+The .inspect method outputs the object’s memory location.
+.display is used to print output as well, taking in an argument of a writable output stream.
+The to_a method, if defined, provides an array-like representations of objects. This also gives you the capability to use the star operator. The star, * operator turns any array, or any object that responds to to_a into the equivalent of a bare list. Think of the sponge operator.
+Ruby does not automatically convert strings to numbers or numbers to strings.
+The to_i equivalent turns Strings to Integers. “Hello” contains no characters, and thus returns 0. “123Hello”.to_i returns 123.
+to_f returns a conversion of a String to a floating point number.
+Objects can play the role of strings as long as they have a to_str or to_s method.
+Giving objects a to_ary method allows you to operate on the object as if was an array.
+Every expression evaluates to an object, even true and false. That way, they can have to methods for comparison.
+Every expression has a true and false value. Empty class definitions are false. Non-empty class definitions evaluate to the last value they contain. Method definitions are true. 
+Nil has a Boolean of false. Only the objects false and nil have a boolean value of False.
+nil.to_s returns “”, nil.to_i returns 0, and nil.object_id returns 8.
+Include the Comparable module for comparisons between objects.
+==, eql?, and equal? give the same results when you compare two objects.
+Implement the <=> spaceship operator to override the greater than, less than, and equal to operators all at once.
+Call .methods to see all of an Object’s methods. You may also ask solely for an Object’s singleton methods with .singleton_methods.
+If you mix a module into a class with include, instances of that class will report themselves as being able to call the instance methods from that module. There’s also .private_methods, .public_methods, and .protected_methods. You can also examine their instance methods: .private_instance_methods, .protected_instance_methods, .public_instance_methods
+Chapter 8: Strings, Symbols, and other Scalar Objects
+Scalar means one-dimensional. This refers to objects that represent single values, as opposed to collections or container objects that hold multiple values. These include Strings, Symbols, Integers, Floating-point numbers, Time, Date, and DateTime objects…
+A string literal is enclosed in quotation marks: “This is a string”. Single quotes can also be used: ‘This is also a string’. String interpolation doesn’t work with single quoted strings. Single quotes disable the #{...} interpolation mechanism.
+Backslashes have to be escaped in double quotes, but you can just type  \ once in a single quoted string.
+Other quoting mechanisms. 
+%q{}% produces a single-quoted string where you don’t need to use apostrophes.
+%Q{}% or %{} generates a double-quoted string.
+A “here” document is a string, that often takes the form of a template or a set of data lines. It’s “here” because it’s physically present in the program file but not read in from a separate text file.
+The <<EOM operator means that the text that follows, up to but not including the next occurrence of “EOM”.
+It has to be flush-left, but you can turn this off by prepending a hyphen to the first EOM.
+Use string[index] to access the character at the index of the string. Use string[low, high] to create a substring of the string.
+You can also provide a range as the argument, i.e.: [4..8], rather than two parameters. By specifying a negative number as the first index, you can reverse the string.
+Argue a substring into the string brackets to check if the substring is within the string. If not found, will return nil, otherwise returns the original substring.
+You can also pass in regular expression. The [] method is also available under the name slice, and slice! Modifies the array permanently.
+Use []= to assign the string to a new value created from the [] method used.
+String concatenation with + returns a new string.
+To append a second string permanently to an existing string, use the << method. Str << “berry” for example.
+Combine strings and objects with a to_s method using string interpolation.
+Ask whether a string contains a given substring using include?. Test for a given start or end to a string with start_with? And end_with? Test for the absence of content with the empty? method.
+Use .size for the length of a string, and string.count(“a”) to count the occurrences of the letter “a”. To count letters within a given range of letters, string.count(“g-m”).
+String.index(substring) returns the first occurrence of the given substring to the string from the left.
+.ord gives the ordinal code of a string’s first letter. The reverse operation is given for integers with .chr to check their string equivalent. 97.chr returns “a”
+Check for string equality with the double equals == operator, or the .equal? Method.
+A transformation applies some kind of procedure to change the content of a string, and a conversion derives a second, unrelated object, perhaps not even a string, from the string.
+Transformations include .upcase, .downcase, and .capitalize.
+Chop removes the end of the string, whereas .chomp(‘ck’) removes ‘ck’ from the end of the string if the string ends with it.
+The __ENCODING__ constant displays UTF-8 as the default encoding.
+You can recognize symbols with their leading colon literal constructor. Symbols are stringlike but share a lot in common with Integers.
+Symbols are immutable. There’s no such thing as appending characters to a symbol once the symbol exists.
+Symbols are unique. Whenever you see :abc, you’re seeing a representation of the same object. 
+Haha, symbol object don’t represent anything other than themselves. In this sense, a variable name is even more “symbolic” than a symbol.
+Symbols in practice serve as method arguments or hash keys.
+Using symbols as keys rather than strings is superior because symbols are processed faster. You’ll save time if you’re doing a lot of hash lookups.
+Using a symbol as a hash key means that you can remove the => pointer and simply write the hash as the variable name, with a trailing colon rather than a leading colon.
+Symbols are immutable. The symbol :a can show you the symbol :A, but it can’t be the symbol :A.
+Numerics are objects, and you can send messages to them, just like any other object.
+Hexadecimal integers are indicated by a leading 0x.
+Time, Date, and DateTime are scalar objects contained within the ‘date’ and ‘time’ modules.
+Create dates with either the .today, .new(year, month, day), or .parse(“year/month/day”) messages.
+Time objects provide more specific time information, down to the minute and second. The DateTime feature has special jd, commercial, and strptime constructors.
+There’s also boolean returning functions for dt = DateTime.now, like dt.monday? or dt.friday?
+Time, Date, and DateTime all convert to each other.
+
+Chapter 9: Collections and Container Objects
+Collections of objects are placed inside container objects. This is dominated by arrays and hashes.
+Arrays are ordered as well as hashes. Hashes store objects in pairs, each pair consisting of a key and value. Hashes are sometimes called dictionaries or associative arrays in other languages.
+Arrays are in a way hashes, where the keys happen to be consecutive integers.
+Initialize arrays either with Array.new or the square brackets literal array constructor.
+The Array() method creates an array from its single argument. It checks if the argument has a .to_ary or .to_a method and uses that to construct the array.
+Change elements within an array with the setter = method.
+You can access more than one element at a time from an array by specifying more than one index value in the array.
+Use .unshift to place elements at the beginning of an array. Use .push to place elements at the end of an array. Or use the << operator to achieve equivalent functionality to .push. Use .shift to remove and return the first item in the list. These operations permanently change the array.
+The concat method combines two arrays. You can achieve the same functionality with the + operator.
+Use the * operator an an array to perform the .join method.
+Call .uniq on an array to return a new array with all the duplicate elements removed.
+You can create hashes with the curly braces literal constructor, Hash.new method, Hash.[] method, or the top-level method whose name is Hash.
+You can pass in an even number of arguments to the top level Hash method in order to return a hash object containing the pairs made from the odd elements as keys, and even elements as values.
+To store elements in a hash, you can use the []= method, or you can call the equivalent .store method.
+The .fetch method gives you an alternative way to grab values by key in hashes. fetch differs from [] because [] gives you a nil value for a nonexistent key, where fetch raises an exception.
+Use .values_at to retrieve values for multiple keys at once.
+Specify a default value to a Hash by passing it into the constructor.
+The destructive way of combining hashes is through the .update method, which combines two hashes, and overrides keys of the first hash to matching key-values of the second hash. The non-destructive equivalent is the .merge method. .merge! is an equivalent method to .update.
+There are several transformations of hashes. Derive sub-hashes using the select method. Reject elements of a hash using the reject method, and perhaps passing a block call.
+Switch the keys and values of a hash using .invert. Beware the invert call since hashes may contain duplicate values for more than one key. So if you invert twice, then one duplicate value might get lost.
+Hash#clear empties the hash to an empty {}.
+Common hash query methods include has_key? include? key? member? has_value? value? empty? Size
+If you intend to include a hash as a parameter, wrap the argument list in a set of parentheses. Otherwise, the hash will end up getting interpreted as a block of code.
+A range is an object that involves two major concepts: inclusion and enumeration.
+Inclusion - does a value fall inside the range?
+Enumeration - the range is treated as a traversable collection of items
+A range with two dots is an inclusive range. A range with three dots is exclusive. The difference is whether or not the endpoint is included inside the range.
+Check whether ranges are exclusive or not with the .exclude_end? message.
+Test whether something falls within a range with .cover? It checks whether the value is greater than the start point and less than the end point.
+.include? unlike .cover simply treats the range as a kind of crypto-array and collection of values. It does not perform the same type of comparison check as the .covers method.
+The Set is a standard library class. A set is a unique collection of objects, with no duplicates. Internally, sets use a hash to enforce the uniqueness of their contents.
+Add a block call after the argument field of a Set call in order to yield a block of code on each item in the Set before initializing them.
+Later, add an object to a set with a <<. And then remove from the set with .delete. The << method is also available as add, which returns nil rather than the set itself.
+intersection is aliased as &. union is aliases as +. And difference as -.
+The exclusive-or operator, ^, creates a set from a set and en enumerable from elements in set or the enumerable, but not both.
+Use .merge to combine two sets.
+Test for subset/superset relationships using the subset and superset methods. A subset of a representation of an another set except for at least one or more elements. Superset is the obvious which checks if the passed set is a subset of self.
+
+Chapter 10: Enumerable and Enumerator
+Collection objects typically include the Enumerable module.
+All of these collection objects must include the .each method, and then Enumerable enables plenty of sorting capabilities for the collection.
+Enumerators are objects that encapsulate knowledge of how to iterate through a particular collection.
+The each method must yield items to a supplied code block, one at a time. Arrays yield elements one a time. Hashes yield key/value pairs in as two-element arrays, one at a time.
+Check for inclusion within collections with .include? .any? .one? .none? 
+Enumerables excel at searching and selecting.
+These methods take a code block and may return one object, an array, or nil depending on the criteria.
+.find returns the first element that matches its supplied code block. .find_all returns a  new collection containing all the elements of the original collection that match the criteria.
+Use the dangerous .select! Method to reduce an array to only the array of elements that pass the given code block criteria.
+enumerable.grep(expression) is essentially equivalent to enumerable.select {|element| expression === element }
+The group_by operation on an enumerable collection takes a block and returns a hash.
+.partition splits the elements of an enumerable into two arrays based on whether or not the code block returns true or false for each element. It returns an array of two subarrays, the first subarray being true, and the next being false.
+Element-wise operations help find the largest or smallest objects within the Enumerable.
+There’s a .first method but no .last method because you have to consider the case where the iteration goes on forever.
+.take removes grabs a number of elements from an array. .drop removes a number of elements from an array.
+The .min and .max method return the minimum and maximum values respectively, using  the spaceship, <=> operator. There’s also a minmax method which returns the minimum and maximum within a two-element array.
+.reverse_each enumerates through an enumerable in reverse order.
+The .each_with_index gives you the option to have an index parameter as you iterate through each object within the enumerable. Arrays have a fundamental sense of an index, whereas hashes don’t.
+The .each_slice methods yields the collection progressively in slices of size n.
+The .cycle method iterates through an enumerable collection either infinitely through a loop, or finitely if you pass a number.
+The .inject method works by initializing an accumulator object and then iterating through a collection, performing a calculation on each iteration and resetting the accumulator, for purposes of the next iteration, to the result of that calculation.
+[1, 2, 3, 4].inject(0) {|acc, n| acc+n}
+The accumulator is initialized to  0. The first go-through, acc gets set to 0, and then n is set to 1, the first array-item. The calculation result is then 0 + 1, 1. The second time through, it’s 1 and 2, so 3. Then 3, and 3, so 6. Finally, 6 and 4, so 10.
+If .inject has no supplied argument for the accumulator, the accumulator is the first element.
+The .map method, or .collect method takes an original collection, and returns a new collection based on calling a code block on each element within the original.
+.map distinguishes from .each since it actually returns a new collection. .each is primarily used for its side effects, whereas .map is used for the return value of the collection.
+The destructive .map! In the Array class sets the original array to the result of the .map code blocks.
+Iterate through bytes with .each_byte on strings. Or use .each_char.
+Give classes that include the enumerable module the <=> spaceship operator, to be able to successfully .sort them.
+.sort_by is similar to srot in that it figures out that you want to sort every item according to how you treat one item in the collection.
+An iterator is a method that yields one or more values to a code block. An enumerator is an object not a method. An enumerator, at its heart, is a simple enumerable object withan .each method, and all the usual Enumerable module methods: .select, .inject, .map, and more.
+If you call an enumerable method without a block, you’ll most often get an enumerator. 
+You can protect objects with enumerators as a way of passing in a enumerator version of an object rather than the original object itself.
+Enumerators maintain state. This gives them an advantage of being enumerable objects over iterators which are stateless methods.
+Method chaining is quick and easy, but leads to the creation of intermediate objects. Enumerators can help economize the creation of intermediate objects.
+Obfuscation - to make obscure, abstract, unclear
+The .pack method turns an array into a string, interpreting each element in the array in a specified manner through the argument.
+Call the .lazy method directly on a range object to produce a Enumerator::Lazy.
+
+Chapter 11: Regular Expressions
+Regular expressions in Ruby are objects.
+Great pitch for regex: “They’re in the view of many people, difficult to use, to read, opaque, unmaintainable, and ultimately counterproductive. You have to judge for yourself. Even if you decide you aren’t a ‘regular expression person,’ you need a working knowledge of them”
+You can .scan a string for multiple occurrences of a pattern. Substitute a replacement string for a substring. Split a string into multiple substrings based on a matching separator.
+Every .match for a regular expression either succeeds or fails. When it fails, the result is nil. To get the parenthetical captures from a MatchData object, access them directly by indexing the object, array-style. Index 0 gives the entire string, and from 1 onward, an index of n gives the nth capture.
+Named captures give a more reader-friendly way to recover data than simple index parameters. 
+Quantifiers let you specify how many times in a row you want something to match. Anchors let you stipulate that the match would occur at a certain structural point in a string, beginning, end, word boundary, or other part of the string. Modifiers act like switch to flip the behavior of the regexp engine.
+“Abc” doesn’t inherently relate to regex, /abc/ anymore than any other string containing “abc”. But there are many string-to-regexp idioms.
+You can perform the familiar #{...} interpolation technique with regex.
+Call .to_s on a regex, to get the mix of modifiers it contains in string form.
+The .scan method goes left to right through a string and repeatedly tests for a match with the pattern you specify, returning an array.
+.split(//) returns an array of characters in a string. 
+.sub makes one substitution in a string, and .gsub makes all possible substitutions.
+Case (case statements) equality for regular expressions is a match test, ===.
+
+Chapter 12 File and I/O Operations
+The IO class handles all input and output streams.
+The constants STDERR, STDIN, and STDOUT are automatically set when the program starts. STDERR is an IO object.
+IO can puts to a file, and also print to a file, or write to a file. write is like print rather than puts in that respect.
+IO objects based on the global input record separator.
+The global variable. $/ determines an STDIN’s sense of new lines in its “each” method.
+There are standard i/o global variables such as $stdin that equate to constants like STDIN. The global variable versions are provided to give a way to modify default standard IO stream behaviors.
+Keyboard input is accomplished for the most part with gets and getc. gets returns a single line of input, and getc returns one character.
+File is a subclass of IO.
+Reading a file can be performed one byte at a time or one line at a time (where line is defined by the $/ delimiter).
+When you’ve finished reading from and/or writing to a file, you need to close it with the close method.
+File objects are enumerable. That means you can iterate through the liens one at a time rather than reading the whole file into memory.
+You can read files character by character. Read a character with getc. Put a character “back” with ungetc.
+Use pos to find where in the file the pointer is currently pointing. The seek method lets you move around in a file by moving the position pointer to a new location. Pass IO::SEET_SET, IO::SEEK_CUR IO::SEEK_END as a second parameter to seek in order to respectively jump around the file.
+Writing to a file involves using puts, prints, or write on a File object opened in write or append mode. Write mode is indicated by w as the second argument to new.
+By using file.open with a code block. The block receives the File object as its single argument and automatically closes the code block.
+There’s output for wrong file operations: Errno::EACCES (permission denied), Errno::ENOENT (no such entity), and Errno:EISDIR (is a directory - an error introduced when you open a directory as if it were a file).
+Getting info and querying file. File has size querying methods: File.size. FileTest has file info related methods: FileTest.exist? FileTest.directory? FileTest.file? FileTest.symlink?
+To glob a directory, use the Dir.glob method.
+Use Dir.mkdir, Dir.chdir, and Dir.rmdir to create, change, and remove directories.
+The FileUtils modules provides many practical methods that mimic UNIX-like operating systems and their commands. For example FileUtils.ln_s creates symbolic links in a similar manner to the ln -s command. FileUtils.rm_rf recursively and unconditionally removes a directory. 
+FileUtils::DryRun tests what would happen if you used a FileUtils command.
+The Pathname class lets you create Pathname objects and manipulate and iterate through them in the familiar directory structure.
+The StringIO class allows you to treat strings like IO objects.
+The open-uri standard library package lets you retrieve information from the net-work using the HTTP and HTTPS protocols. You get back a StringIO object containing the results of your request.
+
+Part 3: Ruby Dynamics
+Object individuation goes into the details of how Ruby makes it possible for individual objects to live their own lives and develop their own characteristics and behaviors outside of the class-based characteristics they’re “born” with.
+
+Chapter 13: Object Individuation
+Object individuation allows objects to behave differently from other objects of the same class.
+An object’s singleton methods live in the object’s singleton class. Every object ultimately has two classes. The class of which it’s an instance, and its singleton class.
+The most common singleton method added to an object is the class method.
+To get inside the definition body of a singleton class, you use a special notation. The << object notation means the anonymous, singleton class of object. This assumes that an object variable has already been declared. When you’re inside the singleton class - definition body, you can define methods - and these methods will be singleton methods of the object whose singleton class you’re in.
+Remember, specific an individual object has a singleton class in order to differentiate itself from other objects of the same class of its instance.
+In order to avoid creating singleton methods for every single object that wants the same functionality, create a module that creates the singleton method.
+Modules included in the singleton class are encountered before the original class and before any modules included in the original class. See this graphically by printing the ancestors method.
+The singleton_class method gets access to its ancestors through singleton_class.ancestors.
+A singleton method of a class object can also be called on subclasses of that class.
+Singleton classes of class objects are sometimes called meta-classes.
+Singleton also refers to the singleton pattern which refers to a class that has only one instance.
+An alias is a synonym for a method name.
+You can always avoid chain-related problems if you don’t chain. For example, chaining a reverse! to a gsub! might be dangerous since gsub! sets the string to nil if no replacement is made. But simply having the gsub and reverse call on separate lines avoids the danger of chaining a reverse to a nil object.
+Try to avoid changing the documented behavior of core Ruby methods.
+The most common category of changes to built-in Ruby classes is the additive change. You can add plenty of methods at once with the Active Support library
+gem install activesupport
+When you install Active Support, you enter an unwritten contract not to override their methods.
+A pass-through method change involves overriding an existing method in such a way that the original version of the method ends up getting called along with the new version. The new version does what it needs to do and then passes its arguments along to the original version of the method.
+An additive/pass-through hybrid is a method that has the same name as an existing core method, calls the old version of the method, and adds something to the method’s interface. In other words, it’s an override that offers a superset of the functionality of the original method. For example, Active Support adds to the .to_s method of the Time class in order to give it an option to have additional arguments.
+Object#extend changes the behavior of an individual object. Extend essentially mixes a module into an object’s singleton class.
+Extending a class object with a module means mixing the modules into class’s singleton class.
+Use .extend to take advantage of a module to modify some core functionality.
+The .extend call will make more explicit the direct modification of a core method.
+A refinement makes a temporary, limited-scope change to a class. The refine method takes a class name and a code block, and the using method adopts the method within the specific object or class you’re refining. 
+BasicObject enables you to create objects that do nothing, which means you can teach them to do everything without worrying about clashing with existing methods. Usually, this entails heavy use of method_missing.
+
+Chapter 14: Callable and Runnable Objects
+The notion of a callable object is embodied in Ruby through objects to which you can send the message call. In Ruby, these include Proc objects, lambdas, and method objects.
+An instance of Proc is an object. A proc is a container of code. When you call the proc, the block you provided with the proc is executed.
+When you provide a code block to a method, you’re not sending the block to the method as an argument; you’re providing a code block - a thing unto itself.
+In order to use a proc as block, you send the proc as an argument to the method you’re calling.
+You can represent a proc version of a class by prepending an & sign to the class. For example Person#to_proc is equivalent to &Person.
+You can send the to_proc trigger with the & symbol right before the symbol’s colon.
+One of the most important aspects of the Proc object is its service as a closure: anonymous functions that preserve the local variable bindings that are in effect when the procs are created.
+A closure is like a suitcase. It preserves its last stored state whenever you pack and unpack it. A classic example is counter method that preserves its last count whenever it’s called.
+Paraphernalia: miscellaneous extra articles and details
+The lambda methods returns a Proc object, using the provided code block as the function body.
+Lambda-flavored procs are fussy, and don’t like being called with the wrong number of arguments.
+You can use the “stabby-lambda” constructor as an alternative to give lambda functions arguments rather than the typical vertical pipes.
+You can call a callable object with either the call method, [] brackets method, or () parentheses method.
+Creating threads in Ruby means instantiating the Thread class. Ruby will try to operate threads through available system facilities depending on the Ruby implementation. It will otherwise fall back on green threads (threads implemented completely inside the interpreter).
+You can kill, exit, or terminate threads. You can also stop and start threads and examine their state. A thread can be asleep awake, alive or dead.
+You can issue system commands in several ways in ruby. Two relatively simple options are the system method and the `` (backticks) technique are simple.
+
+Chapter 15: Callbacks, Hooks, and Runtime Introspection
+The use of a callback or hook happens during events such as:
+A nonexistent method being called on an object
+A module being mixed into a class or another module
+An object being extended with a module
+… and more
+One of the simple runtime hooks is the method_missing callback.
+To know when a module gets included or prepended into another class or module, you can add the prepended or included hook to a module.
+There’s also the extended and inherited hooks for modules and classes as a callback.
+The Module#const_missing methods presents another commonly used callback.
+There’s also the highly useful method_added callback for classes. Or the singleton_method_added callback for the addition of methods to singleton classes.
+Every object has a private_methods and protected_methods method.
+You can get all the enumerable overrides of an object (page 472).
+You can also list objects’ singleton methods with .singleton_methods.
+The local_variables method lists the current local variables, and the global_variables method does the same for global variables that begin with the $ character.
+You can also list an object or class’s instance variables, that begin with the @ character.
+Examine the stack trace with caller.
+Ruby ships with MiniTest. 
